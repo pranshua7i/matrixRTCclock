@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS3D Wifi Clock Updater</title>
+    <script type="module" src="https://unpkg.com/esp-web-tools@9.1.0/dist/web/install-button.js"></script>
+    <style>
+        * {
+            font-family: Verdana;
+            margin-left: 10px;
+        }
+
+        #instructions {
+            background-color: floralwhite;
+            padding-left: 5px;
+            padding-top: 8px;
+            border: 2px solid pink;
+            margin: 5px;
+        }
+
+        li {
+            padding: 5px;
+        }
+        
+    </style>
+</head>
+<body>
+    <table>
+    <tr>
+        <td><img src="logo.jpg" width="100px" style="border:2px solid white; border-radius: 15px;"></td>
+        <td><h1>PitStop 3D</h1></td>
+    </tr>
+    </table>
+    <h2>WiFi Tetris Clock</h2>
+    <div id="page">
+        <div id="instructions">
+            <b>IMPORTANT:</b> <br>
+            <ul>
+                <li>Please make sure that the WiFi clock is connected to the computer before proceeding further.</li>
+                <li>This tool will work on <b>Chrome or Edge browsers on DESKTOP ONLY</b> (Will not work on mobile).</li>
+            </ul>
+        </div>
+    </div>
+
+    <br>
+    <p>Click the install button below to install the "PS3d WiFi Clock" software to your device.</p>
+
+    <br>
+    <esp-web-install-button manifest="firmware.json"></esp-web-install-button>
+    <br><br>
+    <hr>
+    <p><meta charset="utf-8">
+        Clicking the above button will show a popup. Please select your device from the list. (See example of how your device would look like **the name will be different**)
+    </p>
+    <div>
+        <img src="SCR-01.jpg" width="350px" id="screenshot01">
+    </div>
+</body>
+</html>
