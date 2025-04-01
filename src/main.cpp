@@ -11,9 +11,10 @@
 // Wifi network station credentials
 
 RTC_DS3231 rtc;
+
 // Hours in 24H format (i.e. for 3:45 PM, timeHour = 15, timeMinute = 45)
-int timeHour = 18;
-int timeMinute = 59;
+int timeHour = 15;
+int timeMinute = 45;
 
 
 
@@ -125,12 +126,13 @@ void drawConnecting(int x = 0, int y = 0, const char* text = "...")
 }
 
 void setup() {
+  Serial.begin(115200);
   if (!rtc.begin()) {
     Serial.println("RTC module is NOT found");
     while (1);
   }
-  rtc.adjust(DateTime(2025, 3, 31, timeHour, timeMinute, 0));
-  Serial.begin(115200);
+  //rtc.adjust(DateTime(2025, 3, 31, timeHour, timeMinute, 0));
+
 
   HUB75_I2S_CFG mxconfig(
     panelResX,   // Module width
@@ -191,9 +193,10 @@ void setup() {
 
 void setMatrixTime() {
   DateTime now = rtc.now();
-
+  timeHour = now.hour();
+  timeMinute = now.minute();
   char time_string[6];
-  snprintf(time_string, sizeof(time_string), "%02d:%02d", now.hour(), now.minute());
+  snprintf(time_string, sizeof(time_string), "%02d:%02d", timeHour, timeMinute);
   String timeStr = String(time_string);
   String timeString = "";
   String AmPmString = "";
@@ -222,15 +225,15 @@ void setMatrixTime() {
     }
 
     int currentHour = hourStr.toInt() % 12;
+    if (currentHour == 0) {
+      currentHour = 12;
+    }
     hourStr = String(currentHour);
     timeStr = hourStr + timeStr.substring(2);
     // Get the time in format "1:15" or 11:15 (12 hour, no leading 0)
     // Check the EZTime Github page for info on
     // time formatting
     timeString = timeStr;
-    if (currentHour == 0) {
-      currentHour = 12;
-    }
 
     //If the length is only 4, pad it with
     // a space at the beginning
@@ -271,6 +274,9 @@ void handleColonAfterAnimation() {
 
 
 void loop() {
+  if(rtc.lostPower()){
+    rtc.adjust(DateTime(2025, 3, 31, timeHour, timeMinute, 0));
+  }
   unsigned long now = millis();
   if (now > oneSecondLoopDue) {
     // We can call this often, but it will only
