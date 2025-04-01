@@ -90,16 +90,16 @@ void animationHandler()
 void drawIntro(int x = 0, int y = 0)
 {
   dma_display->fillScreen(myBLACK);
-  tetris.drawChar("O", x, y, tetris.tetrisGREEN);
-  tetris.drawChar("n", x+5, y, tetris.tetrisGREEN);
-  tetris.drawChar("e", x+11, y, tetris.tetrisGREEN);
-  tetris.drawChar(" ", x+17, y, tetris.tetrisGREEN);
-  tetris.drawChar("M", x+22, y, tetris.tetrisGREEN);
-  tetris.drawChar("o", x+27, y, tetris.tetrisGREEN);
-  tetris.drawChar("m", x+32, y, tetris.tetrisGREEN);
-  tetris.drawChar("e", x+37, y, tetris.tetrisGREEN);
-  tetris.drawChar("n", x+42, y, tetris.tetrisGREEN);
-  tetris.drawChar("t", x+47, y, tetris.tetrisGREEN);
+  tetris.drawChar("L", x, y, tetris.tetrisGREEN);
+  tetris.drawChar("o", x+5, y, tetris.tetrisRED);
+  tetris.drawChar("a", x+11, y, tetris.tetrisYELLOW);
+  tetris.drawChar("d", x+17, y, tetris.tetrisCYAN);
+  tetris.drawChar("i", x+22, y, tetris.tetrisMAGENTA);
+  tetris.drawChar("n", x+27, y, tetris.tetrisBLUE);
+  tetris.drawChar("g", x+32, y, tetris.tetrisORANGE);
+  tetris.drawChar(".", x+37, y, tetris.tetrisGREEN);
+  tetris.drawChar(".", x+42, y, tetris.tetrisRED);
+  tetris.drawChar(".", x+47, y, tetris.tetrisYELLOW);
   dma_display->flipDMABuffer();
 }
 
