@@ -100,6 +100,7 @@ void drawIntro(int x = 0, int y = 0)
   tetris.drawChar(".", x+37, y, tetris.tetrisGREEN);
   tetris.drawChar(".", x+42, y, tetris.tetrisRED);
   tetris.drawChar(".", x+47, y, tetris.tetrisYELLOW);
+  
   dma_display->flipDMABuffer();
 }
 
