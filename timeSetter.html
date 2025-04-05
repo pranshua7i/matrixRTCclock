@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ESP32 Time Sync</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        blockquote {
+            background-color: lightyellow;
+            padding: 10px;;
+            border: 1px solid silver;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        li {
+            line-height: 18pt;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        button {
+            padding: 8px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .button-group button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        button {
+            cursor: pointer;
+            margin-top: 10px;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        .status {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .heading {
+            align-items: center;
+            font-size: 24px;
+            text-align: center;
+        }
+
+        img {
+            border-radius: 15px;
+            height: 64px;
+            padding: 10px;
+        }
+
+        .connected {
+            background-color: #10b981;
+        }
+
+        .disconnected {
+            background-color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="heading">
+            <img src="data:image/jpg;base64,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" alt=""><br>
+            PitStop3D Tetris Clock
+        </div>
+        
+        <div class="form-group">
+            <blockquote>
+            <ul>
+                <li>Select your Time Zone from the first drop down.</li>
+                <li>Current time for the selected TIme Zone will be displayed automatically.</li>
+                <li>Click on the "Connect PS3D Tetris Clock" button and select the correct port.</li>
+                <li>Once connected, click on the "Set Time" button to set the time for your clock.</li>
+            </ul>
+            </blockquote>
+        </div>
+
+        <div class="form-group">
+            <label for="timezone">Select your Time Zone below:</label>
+            <select id="timezone">
+                <option value="">-- Select Your TimeZone --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="datetime">Current Date & Time</label>
+            <input type="datetime-local" id="datetime" readonly>
+        </div>
+
+
+        <div class="button-group">
+            <button id="connect">Connect PS3D Tetris Clock</button>
+            <button id="sendTime">Set Time</button>
+        </div>
+
+
+        <div class="status">
+            <span id="statusBadge" class="badge disconnected">Disconnected</span>
+        </div>
+    </div>
+
+    <script>
+        let port, writer;
+
+        const tzData = [
+            { "id": "America/New_York", "name": "Eastern Time (US)", "offset": "-05:00" },
+            { "id": "America/Chicago", "name": "Central Time (US)", "offset": "-06:00" },
+            { "id": "America/Denver", "name": "Mountain Time (US)", "offset": "-07:00" },
+            { "id": "America/Los_Angeles", "name": "Pacific Time (US)", "offset": "-08:00" },
+            { "id": "America/Anchorage", "name": "Alaska Time (US)", "offset": "-09:00" },
+            { "id": "Pacific/Honolulu", "name": "Hawaii Time (US)", "offset": "-10:00" },
+            { "id": "America/Phoenix", "name": "Arizona Time (no DST)", "offset": "-07:00" },
+            { "id": "America/Indiana/Indianapolis", "name": "Indiana (East)", "offset": "-05:00" },
+            { "id": "America/Puerto_Rico", "name": "Puerto Rico", "offset": "-04:00" },
+            { "id": "Pacific/Guam", "name": "Guam", "offset": "+10:00" },
+            { "id": "Pacific/Pago_Pago", "name": "American Samoa", "offset": "-11:00" },
+            { "id": "Europe/London", "name": "Greenwich Mean Time (UK)", "offset": "0:00" },
+            { "id": "Europe/Berlin", "name": "Central European Time", "offset": "+01:00" },
+            { "id": "Europe/Paris", "name": "Central European Time (Paris)", "offset": "+01:00" },
+            { "id": "Europe/Rome", "name": "Central European Time (Rome)", "offset": "+01:00" },
+            { "id": "Europe/Madrid", "name": "Central European Time (Madrid)", "offset": "+01:00" },
+            { "id": "Europe/Warsaw", "name": "Central European Time (Warsaw)", "offset": "+01:00" },
+            { "id": "Europe/Istanbul", "name": "Turkey Time", "offset": "+03:00" },
+            { "id": "Europe/Moscow", "name": "Moscow Time", "offset": "+03:00" },
+            { "id": "Europe/Kiev", "name": "Eastern European Time (Kyiv)", "offset": "+02:00" },
+            { "id": "Europe/Athens", "name": "Eastern European Time (Athens)", "offset": "+02:00" },
+            { "id": "Asia/Dubai", "name": "Gulf Standard Time (UAE)", "offset": "+04:00" },
+            { "id": "Asia/Kolkata", "name": "India Standard Time", "offset": "+05:30" },
+            { "id": "Asia/Karachi", "name": "Pakistan Standard Time", "offset": "+05:00" },
+            { "id": "Asia/Bangkok", "name": "Indochina Time", "offset": "+07:00" },
+            { "id": "Asia/Jakarta", "name": "Western Indonesia Time", "offset": "+07:00" },
+            { "id": "Asia/Shanghai", "name": "China Standard Time", "offset": "+08:00" },
+            { "id": "Asia/Tokyo", "name": "Japan Standard Time", "offset": "+09:00" },
+            { "id": "Asia/Seoul", "name": "Korea Standard Time", "offset": "+09:00" },
+            { "id": "Asia/Singapore", "name": "Singapore Time", "offset": "+08:00" },
+            { "id": "Asia/Hong_Kong", "name": "Hong Kong Time", "offset": "+08:00" },
+            { "id": "Asia/Taipei", "name": "Taipei Time", "offset": "+08:00" },
+            { "id": "Asia/Kuala_Lumpur", "name": "Malaysia Time", "offset": "+08:00" }
+        ];
+        const tzSelect = document.getElementById("timezone");
+
+        tzData.forEach(tz => {
+            const opt = document.createElement("option");
+            opt.text = `${tz.id} - ${tz.name}`;
+            opt.value = tz.id;
+            tzSelect.appendChild(opt);
+        });
+
+        tzSelect.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        function getTimeFormatted(dt) {
+            const year = dt.getFullYear();
+            const month = String(dt.getMonth() + 1).padStart(2, '0');
+            const day = String(dt.getDate()).padStart(2, '0');
+            const hours = String(dt.getHours()).padStart(2, '0');
+            const minutes = String(dt.getMinutes()).padStart(2, '0');
+            const seconds = String(dt.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        }
+
+        function convertTZ(date, tzString) {
+            return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
+        }
+
+        setInterval(() => {
+            const dt = convertTZ(new Date(), tzSelect.value);
+            document.getElementById("datetime").value = getTimeFormatted(dt);
+        }, 1000);
+
+        function updateStatus(connected) {
+            const status = document.getElementById("statusBadge");
+            if (connected) {
+                status.textContent = "Connected";
+                status.classList.remove("disconnected");
+                status.classList.add("connected");
+            } else {
+                status.textContent = "Disconnected";
+                status.classList.remove("connected");
+                status.classList.add("disconnected");
+            }
+        }
+
+        document.getElementById("connect").addEventListener("click", async () => {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 });
+                writer = port.writable.getWriter();
+                updateStatus(true);
+            } catch (err) {
+                alert("Error connecting to ESP32: " + err.message);
+                updateStatus(false);
+            }
+        });
+
+        document.getElementById("sendTime").addEventListener("click", async () => {
+            if (!writer) {
+                alert("Connect to the ESP32 first!");
+                return;
+            }
+
+            if(document.getElementById("timezone").value == "") {
+                alert("Please select your Time Zone first.");
+                return;
+            }
+
+            const timezoneName = tzSelect.value;
+            const dt = convertTZ(new Date(), timezoneName);
+            const datetimeInput = getTimeFormatted(dt);
+            const data = `${datetimeInput} ${timezoneName}\n`;
+
+            console.log("Sending: ", data);
+            await writer.write(new TextEncoder().encode(data));
+            const badge = document.getElementById("statusBadge");
+            badge.textContent = "Time Sent!";
+            badge.classList.remove("disconnected");
+            badge.classList.add("connected");
+            setTimeout(() => updateStatus(true), 3000);
+        });
+    </script>
+</body>
+
+</html>
