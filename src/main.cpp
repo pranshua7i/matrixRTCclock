@@ -7,15 +7,21 @@
 #include <TetrisMatrixDraw.h>
 #include <RTClib.h>
 #include <ezTime.h>
+#include <time.h>
+#include <Preferences.h>
 
 // Wifi network station credentials
 
 RTC_DS3231 rtc;
+Preferences prefs;
 
 // Hours in 24H format (i.e. for 3:45 PM, timeHour = 15, timeMinute = 45)
 int timeHour = 15;
 int timeMinute = 45;
 
+// Function to set time over serial
+void setTimeFromSerial(String dateTime, int tzOffset);
+void setRTCFromSerial(String dateTime, int tzOffset);
 
 
 const int panelResX = 64;   // Number of pixels wide of each INDIVIDUAL panel module.
@@ -132,8 +138,15 @@ void setup() {
     Serial.println("RTC module is NOT found");
     while (1);
   }
-  //rtc.adjust(DateTime(2025, 3, 31, timeHour, timeMinute, 0));
 
+  // Initializing preferences
+  prefs.begin("ps3dclock");
+  
+  if(prefs.getString("tz", "UTC")) {
+    prefs.putString("tz", "UTC");
+  }
+
+  rtc.adjust(DateTime(2025, 3, 31, timeHour, timeMinute, 0));
 
   HUB75_I2S_CFG mxconfig(
     panelResX,   // Module width
@@ -275,9 +288,24 @@ void handleColonAfterAnimation() {
 
 
 void loop() {
-  if(rtc.lostPower()){
-    rtc.adjust(DateTime(2025, 3, 31, timeHour, timeMinute, 0));
+
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+    int tzOffset;
+    String dateTime;
+    Serial.print("Got: ");
+    Serial.println(input);
+
+    // Expecting format: "YYYY-MM-DDTHH:MM:SS TZ_OFFSET"
+    int separator = input.lastIndexOf(' ');
+    if (separator != -1) {
+        dateTime = input.substring(0, separator);
+        tzOffset = input.substring(separator + 1).toInt();
+        //setTimeFromSerial(dateTime, tzOffset);
+        setRTCFromSerial(dateTime, tzOffset);
+    }
   }
+
   unsigned long now = millis();
   if (now > oneSecondLoopDue) {
     // We can call this often, but it will only
@@ -298,4 +326,43 @@ void loop() {
     animationHandler();
     animationDue = now + animationDelay;
   }
+}
+
+void setTimeFromSerial(String dateTime, int tzOffset) {
+  struct tm timeinfo;
+
+  sscanf(dateTime.c_str(), "%d-%d-%dT%d:%d:%d", 
+          &timeinfo.tm_year, &timeinfo.tm_mon, &timeinfo.tm_mday, 
+          &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec);
+    
+    timeinfo.tm_year -= 1900; // Adjust for struct tm
+    timeinfo.tm_mon -= 1;
+
+    time_t t = mktime(&timeinfo);
+    t += tzOffset * 3600; // Apply timezone offset
+    struct timeval now = { .tv_sec = t };
+    settimeofday(&now, NULL);
+    Serial.println("Time updated successfully!");
+}
+
+void setRTCFromSerial(String dateTime, int tzOffset) {
+  int year, month, day, hour, minute, second;
+    sscanf(dateTime.c_str(), "%d-%d-%dT%d:%d:%d", &year, &month, &day, &hour, &minute, &second);
+
+    // Adjust time based on the timezone offset
+    hour += tzOffset;
+    
+    // Correct overflow/underflow
+    if (hour < 0) {
+        hour += 24;
+        day -= 1;
+    } else if (hour >= 24) {
+        hour -= 24;
+        day += 1;
+    }
+
+    DateTime newTime(year, month, day, hour, minute, second);
+    rtc.adjust(newTime);  // Update RTC module
+
+    Serial.println("RTC Time Set Successfully!");
 }

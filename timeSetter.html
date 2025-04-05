@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Time Sync</title>
+</head>
+<body>
+    <h2>ESP32 Web Serial Time Sync</h2>
+    <label>Date & Time: <input type="datetime-local" id="datetime" readonly></label><br><br>
+    <label>Time Zone: <select id="timezone"><option value="">-- Select Your TimeZone --</option></select></label>
+    <br>
+    <br>
+    <button id="connect">Connect to ESP32</button>
+    <button id="sendTime">Send Time</button>
+    <p id="status">Status: Disconnected</p>
+
+    <script>
+        let tzData = [
+            { "id": "America/New_York", "name": "Eastern Time (US)", "offset": "-05:00" },
+            { "id": "America/Chicago", "name": "Central Time (US)", "offset": "-06:00" },
+            { "id": "America/Denver", "name": "Mountain Time (US)", "offset": "-07:00" },
+            { "id": "America/Los_Angeles", "name": "Pacific Time (US)", "offset": "-08:00" },
+            { "id": "America/Anchorage", "name": "Alaska Time (US)", "offset": "-09:00" },
+            { "id": "Pacific/Honolulu", "name": "Hawaii Time (US)", "offset": "-10:00" },
+            { "id": "America/Phoenix", "name": "Arizona Time (no DST)", "offset": "-07:00" },
+            { "id": "America/Indiana/Indianapolis", "name": "Indiana (East)", "offset": "-05:00" },
+            { "id": "America/Puerto_Rico", "name": "Puerto Rico", "offset": "-04:00" },
+            { "id": "Pacific/Guam", "name": "Guam", "offset": "+10:00" },
+            { "id": "Pacific/Pago_Pago", "name": "American Samoa", "offset": "-11:00" },
+            { "id": "Europe/London", "name": "Greenwich Mean Time (UK)", "offset": "0:00" },
+            { "id": "Europe/Berlin", "name": "Central European Time", "offset": "+01:00" },
+            { "id": "Europe/Paris", "name": "Central European Time (Paris)", "offset": "+01:00" },
+            { "id": "Europe/Rome", "name": "Central European Time (Rome)", "offset": "+01:00" },
+            { "id": "Europe/Madrid", "name": "Central European Time (Madrid)", "offset": "+01:00" },
+            { "id": "Europe/Warsaw", "name": "Central European Time (Warsaw)", "offset": "+01:00" },
+            { "id": "Europe/Istanbul", "name": "Turkey Time", "offset": "+03:00" },
+            { "id": "Europe/Moscow", "name": "Moscow Time", "offset": "+03:00" },
+            { "id": "Europe/Kiev", "name": "Eastern European Time (Kyiv)", "offset": "+02:00" },
+            { "id": "Europe/Athens", "name": "Eastern European Time (Athens)", "offset": "+02:00" },
+            { "id": "Asia/Dubai", "name": "Gulf Standard Time (UAE)", "offset": "+04:00" },
+            { "id": "Asia/Kolkata", "name": "India Standard Time", "offset": "+05:30" },
+            { "id": "Asia/Karachi", "name": "Pakistan Standard Time", "offset": "+05:00" },
+            { "id": "Asia/Bangkok", "name": "Indochina Time", "offset": "+07:00" },
+            { "id": "Asia/Jakarta", "name": "Western Indonesia Time", "offset": "+07:00" },
+            { "id": "Asia/Shanghai", "name": "China Standard Time", "offset": "+08:00" },
+            { "id": "Asia/Tokyo", "name": "Japan Standard Time", "offset": "+09:00" },
+            { "id": "Asia/Seoul", "name": "Korea Standard Time", "offset": "+09:00" },
+            { "id": "Asia/Singapore", "name": "Singapore Time", "offset": "+08:00" },
+            { "id": "Asia/Hong_Kong", "name": "Hong Kong Time", "offset": "+08:00" },
+            { "id": "Asia/Taipei", "name": "Taipei Time", "offset": "+08:00" },
+            { "id": "Asia/Kuala_Lumpur", "name": "Malaysia Time", "offset": "+08:00" }
+        ];
+
+
+        document.getElementById("connect").addEventListener("click", async () => {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 });
+                writer = port.writable.getWriter();
+                document.getElementById("status").innerText = "Status: Connected";
+            } catch (err) {
+                alert("Error connecting to ESP32: " + err.message);
+            }
+        });
+
+        document.getElementById("sendTime").addEventListener("click", async () => {
+            if (!writer) {
+                alert("Connect to the ESP32 first!");
+                return;
+            }
+
+            
+            let timezoneName = document.getElementById("timezone").value;
+
+            datetimeInput = getTimeFormatted(convertTZ(new Date(), tzSelect.value));
+            
+            let data = `${datetimeInput} ${timezoneName}\n`;
+
+            console.log("Sending: ", data);
+
+            await writer.write(new TextEncoder().encode(data));
+            document.getElementById("status").innerText = "Time Sent!";
+        });
+
+
+        function getTimeFormatted(dt) {
+            // Get UTC components
+            const year = dt.getFullYear();
+            const month = String(dt.getMonth() + 1).padStart(2, '0');
+            const day = String(dt.getDate()).padStart(2, '0');
+            const hours = String(dt.getHours()).padStart(2, '0');
+            const minutes = String(dt.getMinutes()).padStart(2, '0');
+            const seconds = String(dt.getSeconds()).padStart(2,'0');
+
+            return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+        }
+
+        function convertTZ(date, tzString) {
+            return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: tzString}));   
+        }
+
+        
+        let tzSelect = document.getElementById("timezone");
+        tzData.forEach(tz => {
+            console.log(tz.id, '-', tz.name);
+            let opt = document.createElement("option");
+            opt.text = `${tz.id} -  ${tz.name}`;
+            opt.value = tz.id;
+            tzSelect.appendChild(opt);
+        });
+
+        let userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        tzSelect.value = userTimeZone;
+
+        setInterval(() => {
+            let tzSelect = document.getElementById("timezone");
+            document.getElementById("datetime").value = getTimeFormatted(convertTZ(new Date(), tzSelect.value));
+            //console.log(tzSelect.value, getTimeFormatted(convertTZ(new Date(), tzSelect.value)));
+        }, 1000);
+    </script>
+</body>
+</html>
