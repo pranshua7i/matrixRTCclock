@@ -16,12 +16,12 @@ RTC_DS3231 rtc;
 Preferences prefs;
 
 // Hours in 24H format (i.e. for 3:45 PM, timeHour = 15, timeMinute = 45)
-int timeHour = 15;
-int timeMinute = 45;
+int timeHour = 00;
+int timeMinute = 00;
 
 // Function to set time over serial
 void setTimeFromSerial(String dateTime, int tzOffset);
-void setRTCFromSerial(String dateTime, int tzOffset);
+void setRTCFromSerial(String dateTime, String tzName);
 
 
 const int panelResX = 64;   // Number of pixels wide of each INDIVIDUAL panel module.
@@ -140,13 +140,20 @@ void setup() {
   }
 
   // Initializing preferences
-  prefs.begin("ps3dclock");
+  prefs.begin("ps3dclock", false);
   
-  if(prefs.getString("tz", "UTC")) {
+  String savedTZ = prefs.getString("tz", "");
+  if(savedTZ != "") {
+    myTZ.setLocation(savedTZ);
+  } else {
     prefs.putString("tz", "UTC");
   }
 
-  rtc.adjust(DateTime(2025, 3, 31, timeHour, timeMinute, 0));
+  if(rtc.lostPower()) {
+    rtc.adjust(DateTime(2025, 3, 31, timeHour, timeMinute, 0));
+  } else {
+    Serial.println("Getting time from RTC.");
+  }
 
   HUB75_I2S_CFG mxconfig(
     panelResX,   // Module width
@@ -174,17 +181,7 @@ void setup() {
   tetris3.display = dma_display; // The "P" or "A" of AM/PM
 
 
-  // Setup EZ Time
-  //setDebug(INFO);
-  //waitForSync();
-
-  //Serial.println();
-  //Serial.println("UTC:             " + UTC.dateTime());
-
-  //myTZ.setLocation(F(MYTIMEZONE));
-  //Serial.print(F("Time in your set timezone:         "));
-  //Serial.println(myTZ.dateTime());
-
+  
   // "Powered By"
   drawIntro(6, -4 + y_offset);
   delay(2000);
@@ -209,6 +206,29 @@ void setMatrixTime() {
   DateTime now = rtc.now();
   timeHour = now.hour();
   timeMinute = now.minute();
+
+  Serial.println("----------");
+  Serial.println(myTZ.getOffset());
+  Serial.println(myTZ.getTimezoneName());
+  Serial.println(myTZ.isDST());
+  Serial.println(myTZ.dateTime(now.unixtime()));
+
+  // Print the current time in a readable format
+  Serial.print("Current time: ");
+  Serial.print(now.year(), DEC);
+  Serial.print('/');
+  Serial.print(now.month(), DEC);
+  Serial.print('/');
+  Serial.print(now.day(), DEC);
+  Serial.print(" ");
+  Serial.print(now.hour(), DEC);
+  Serial.print(':');
+  Serial.print(now.minute(), DEC);
+  Serial.print(':');
+  Serial.print(now.second(), DEC);
+  Serial.println();
+  Serial.println("----------");
+
   char time_string[6];
   snprintf(time_string, sizeof(time_string), "%02d:%02d", timeHour, timeMinute);
   String timeStr = String(time_string);
@@ -220,7 +240,7 @@ void setMatrixTime() {
     
     //Get if its "AM" or "PM"
     int doubleHour = hourStr.toInt();
-    //AmPmString = myTZ.dateTime("A");
+  
     if (doubleHour < 12){
       AmPmString = "AM";
     }
@@ -291,18 +311,20 @@ void loop() {
 
   if (Serial.available()) {
     String input = Serial.readStringUntil('\n');
-    int tzOffset;
+    String tzName;
     String dateTime;
     Serial.print("Got: ");
     Serial.println(input);
 
-    // Expecting format: "YYYY-MM-DDTHH:MM:SS TZ_OFFSET"
+    // Expecting format: "YYYY-MM-DDTHH:MM:SS TZ_ID"
+    // ** NOTE **: Time will alwas be in UTC Format"
     int separator = input.lastIndexOf(' ');
     if (separator != -1) {
         dateTime = input.substring(0, separator);
-        tzOffset = input.substring(separator + 1).toInt();
+        tzName = input.substring(separator + 1);
         //setTimeFromSerial(dateTime, tzOffset);
-        setRTCFromSerial(dateTime, tzOffset);
+        myTZ.setLocation(tzName);
+        setRTCFromSerial(dateTime, tzName);
     }
   }
 
@@ -345,12 +367,11 @@ void setTimeFromSerial(String dateTime, int tzOffset) {
     Serial.println("Time updated successfully!");
 }
 
-void setRTCFromSerial(String dateTime, int tzOffset) {
+void setRTCFromSerial(String dateTime, String tzName) {
   int year, month, day, hour, minute, second;
     sscanf(dateTime.c_str(), "%d-%d-%dT%d:%d:%d", &year, &month, &day, &hour, &minute, &second);
 
-    // Adjust time based on the timezone offset
-    hour += tzOffset;
+    // Time is always received in UTC Format
     
     // Correct overflow/underflow
     if (hour < 0) {
@@ -363,6 +384,12 @@ void setRTCFromSerial(String dateTime, int tzOffset) {
 
     DateTime newTime(year, month, day, hour, minute, second);
     rtc.adjust(newTime);  // Update RTC module
+    time_t utc = rtc.now().unixtime();
+    setTime(utc); // Sets ezTime's internal UTC clock
 
+    Serial.println(tzName);
+    myTZ.setLocation(tzName);
+  
     Serial.println("RTC Time Set Successfully!");
+    prefs.putString("tz", tzName);
 }
