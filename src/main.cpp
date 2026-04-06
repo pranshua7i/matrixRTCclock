@@ -333,7 +333,9 @@ void loop() {
     // We can call this often, but it will only
     // update when it needs to
     setMatrixTime();
+    #if BLINK_COLON
     showColon = !showColon;
+    #endif
 
     // To reduce flicker on the screen we stop clearing the screen
     // when the animation is finished, but we still need the colon to

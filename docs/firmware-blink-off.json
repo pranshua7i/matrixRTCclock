@@ -1,12 +1,12 @@
 {
-  "name": "PS3D Wifi Tetris Clock",
-  "version": "1.0.2",
+  "name": "PS3D Wifi Tetris Clock (Blink OFF)",
+  "version": "1.0.3",
   "builds": [
     {
       "chipFamily": "ESP32",
       "parts": [
         {
-          "path": "merged-firmware.bin",
+          "path": "merged-firmware-blink-off.bin",
           "offset": 0
         }
       ]

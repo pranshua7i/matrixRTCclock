@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TETRIS Clock — Quick Start Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 860px;
+            margin: 30px auto;
+            padding: 0 20px;
+            color: #222;
+            font-size: 0.95em;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 24px;
+            color: #444;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            border: 2px solid #333;
+        }
+
+        .cell {
+            padding: 20px 24px;
+            border: 1px solid #ccc;
+        }
+
+        .cell h2 {
+            margin: 0 0 14px;
+            font-size: 1.1em;
+            text-decoration: underline;
+        }
+
+        .cell ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .cell ol li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .cell ul {
+            margin: 4px 0 8px;
+            padding-left: 20px;
+        }
+
+        .cell ul li {
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+
+        .logo-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+            text-align: center;
+        }
+
+        .logo-cell h1 {
+            margin: 0 0 16px;
+        }
+
+        .logo-box {
+            width: 160px;
+            height: 120px;
+            background: #111;
+            border-radius: 16px;
+            border: 3px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .logo-box span {
+            color: white;
+            font-size: 0.8em;
+            opacity: 0.6;
+        }
+
+        .full-row {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 14px 24px;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+        }
+
+        .contact {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        a {
+            color: #c0392b;
+        }
+
+        .highlight {
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .full-row {
+                grid-column: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-link">&larr; Back to Time Setter</a>
+
+    <div class="grid">
+
+        <!-- Top-left: branding -->
+        <div class="cell logo-cell">
+            <h1>TETRIS Clock</h1>
+            <div class="logo-box"><img src="logo.jpg" alt="PitStop 3D Tetris Clock" style="width:100%; height:100%; object-fit:cover; border-radius:13px;"></div>
+            <div class="subtitle">Quick Start Guide</div>
+        </div>
+
+        <!-- Top-right: instructions -->
+        <div class="cell">
+            <h2>Setting the Time On Your Clock</h2>
+            <ol>
+                <li>Plug in your clock to a computer using a <strong>USB-C Type Cable</strong>.</li>
+                <li>On your computer, open <strong>Google Chrome</strong> or a similar browser, open a new tab, and go to: <a href="https://p3d-tetris-clock-setter.surge.sh" target="_blank">p3d-tetris-clock-setter.surge.sh</a></li>
+                <li>Select your timezone from the first drop-down menu.</li>
+                <li>Click <span class="highlight">"Connect PS3D Tetris Clock."</span></li>
+                <li>A menu will pop up. Select the correct COM port and click <strong>Connect</strong>.</li>
+                <li><strong>If you are unsure which port to use:</strong>
+                    <ul>
+                        <li><strong>Windows:</strong> open Device Manager, open "Ports (COM &amp; LPT)" and note the "COM" number of "USB-SERIAL CH340"</li>
+                        <li><strong>Mac:</strong> Select "USB Serial" under the dropdown menu.</li>
+                    </ul>
+                </li>
+                <li><strong>Please follow to step 8 for Windows, and skip to step 11 for Mac.</strong></li>
+            </ol>
+        </div>
+
+        <!-- Bottom-left: Windows -->
+        <div class="cell">
+            <h2>WINDOWS</h2>
+            <ol start="8">
+                <li>Click <span class="highlight">"Connect"</span></li>
+                <li><strong>Note:</strong> If COM3 (or your correct port) does not show up, please unplug and replug the clock while the dropdown is open.</li>
+                <li>Click <span class="highlight"><strong>"Set Time"</strong></span></li>
+                <li>Please proceed to step 16.</li>
+            </ol>
+        </div>
+
+        <!-- Bottom-right: Mac -->
+        <div class="cell">
+            <h2>MAC</h2>
+            <ol start="12">
+                <li>Select "USB Serial"</li>
+                <li><strong>Note:</strong> If USB Serial (or your correct port) does not show up, please unplug and replug the clock while the dropdown is open.</li>
+                <li>Click <span class="highlight">"Connect"</span></li>
+                <li>Click <span class="highlight">"Set Time"</span></li>
+                <li>Your clock should now reload and display the correct time!</li>
+            </ol>
+        </div>
+
+        <!-- Full-width: step 17 -->
+        <div class="full-row">
+            <strong>17.</strong> You can now plug the clock into any outlet using a USB Type-C Cable and it will retain the correct time.
+        </div>
+
+    </div>
+
+    <div class="contact">
+        <p>Questions / Concerns? Need Help? Contact us!</p>
+        <p><a href="https://pitstop3d.us.com" target="_blank">pitstop3d.us.com</a> &rarr; "Message"</p>
+    </div>
+
+</body>
+</html>
