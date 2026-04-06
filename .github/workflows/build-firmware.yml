@@ -53,8 +53,6 @@ jobs:
 
       - name: Commit updated binaries
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/merged-firmware-blink-on.bin docs/merged-firmware-blink-off.bin
           git diff --cached --quiet || git commit -m "chore: update firmware binaries [skip ci]"
           git push
