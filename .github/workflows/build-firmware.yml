@@ -1,0 +1,72 @@
+name: Build Firmware
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'platformio.ini'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: platformio-${{ hashFiles('platformio.ini') }}
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Build blink-on
+        run: pio run -e blink-on
+
+      - name: Build blink-off
+        run: pio run -e blink-off
+
+      - name: Merge firmware binaries
+        run: |
+          ESPTOOL=$(find ~/.platformio/packages/tool-esptoolpy -name "esptool.py" | head -1)
+          BOOT_APP=$(find ~/.platformio/packages/framework-arduinoespressif32 -name "boot_app0.bin" | head -1)
+
+          merge() {
+            local env=$1
+            local out=$2
+            python3 "$ESPTOOL" --chip esp32 merge_bin \
+              --flash_mode dio --flash_freq 40m --flash_size 4MB \
+              -o "docs/$out" \
+              0x1000  ".pio/build/$env/bootloader.bin" \
+              0x8000  ".pio/build/$env/partitions.bin" \
+              0xe000  "$BOOT_APP" \
+              0x10000 ".pio/build/$env/firmware.bin"
+          }
+
+          merge blink-on  merged-firmware-blink-on.bin
+          merge blink-off merged-firmware-blink-off.bin
+
+      - name: Commit updated binaries
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/merged-firmware-blink-on.bin docs/merged-firmware-blink-off.bin
+          git diff --cached --quiet || git commit -m "chore: update firmware binaries [skip ci]"
+          git push
+
+      - name: Inject build info
+        run: |
+          EPOCH=$(date +%s)
+          sed -i "s|<!-- BUILD_INFO -->|© PitStop3D • Build ${EPOCH}|" docs/index.html
+
+      - name: Deploy to Surge
+        env:
+          SURGE_TOKEN: ${{ secrets.SURGE_TOKEN }}
+        run: |
+          npm install -g surge
+          surge docs p3d-tetris-clock-setter.surge.sh
